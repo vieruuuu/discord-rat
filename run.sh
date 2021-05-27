@@ -1,0 +1,1 @@
+nim c -r -d:ssl -o:./tmp/main.exe ./src/main.nim
