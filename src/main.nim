@@ -1,4 +1,4 @@
-import dimscord, asyncdispatch, options, os, strutils
+import dimscord, asyncdispatch, options, os, strutils, osproc
 import dotenv
 import constants
 import checkForUpdates
@@ -98,9 +98,9 @@ proc messageCreate(s: Shard, m: Message) {.event(discord).} =
 
           discard await discord.api.sendMessage(CHANNEL, THISPCSTR & "saying...")
 
-          let errCode = execShellCmd(
-            """mshta vbscript:Execute("CreateObject(""SAPI.SpVoice"").Speak(""""" &
-            text & """"")(window.close)")"""
+          let errCode = (
+            execCmdEx("""mshta vbscript:Execute("CreateObject(""SAPI.SpVoice"").Speak(""""" &
+                text & """"")(window.close)")""").exitCode
           )
 
           discard await discord.api.sendMessage(
