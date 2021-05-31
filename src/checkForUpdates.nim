@@ -14,7 +14,6 @@ proc checkForUpdates*() =
 
   let latestVersion: float = parseFloat latestRelease["tag_name"].getStr
 
-  #TODO: AM SCHIMBAT VERSIUNEA
   if VERSION < latestVersion:
     # time for update
 
