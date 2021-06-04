@@ -2,3 +2,4 @@ tmp/
 dist/
 alias
 .env
+settings
