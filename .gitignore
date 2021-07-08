@@ -2,4 +2,5 @@ tmp/
 dist/
 alias
 .env
+.danut
 settings

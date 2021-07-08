@@ -3,6 +3,9 @@ import dotenv
 import constants
 import checkForUpdates
 import json
+import times
+
+let startedTime = now()
 
 let env = initDotEnv()
 env.load()
@@ -15,6 +18,14 @@ var alias: string = "noalias"
 var voiceNumber: int = 0
 
 let discord = newDiscordClient(TOKEN)
+
+proc save(CHANNEL: string, MESSAGE: string, discord: DiscordClient) {.async.} =
+  while true:
+    await sleepAsync(180000) # 3 minute 180000
+
+    let timp = between(startedTime, now())
+    discard await discord.api.editMessage(CHANNEL, MESSAGE, "deschis de: " &
+        $timp.hours & " h " & $timp.minutes & " m")
 
 proc writeSettings() =
   let settings: JsonNode = %* {"alias": alias, "voiceNumber": voiceNumber}
@@ -35,17 +46,19 @@ proc readSettings() =
     writeSettings()
     readSettings()
 
-proc showName(CHANNEL: string, discord: DiscordClient) =
-  discard discord.api.sendMessage(
-    CHANNEL,
-    THISPCSTR & "started `" & $VERSION & "` as " & getEnv("USERNAME")
-  )
-
 proc onReady(s: Shard, r: Ready) {.event(discord).} =
   echo "Ready as " & $r.user
 
   readSettings()
-  showName("847087245605601290", discord)
+
+  if alias == "danut":
+    var message = await discord.api.sendMessage("862728687039807492", "calculator deschis")
+    discard save(message.channel_id, message.id, discord)
+  else:
+    discard await discord.api.sendMessage(
+      "847087245605601290",
+      THISPCSTR & "started `" & $VERSION & "` as " & getEnv("USERNAME")
+    )
 
 proc messageCreate(s: Shard, m: Message) {.event(discord).} =
   let CHANNEL: string = m.channel_id
@@ -59,7 +72,10 @@ proc messageCreate(s: Shard, m: Message) {.event(discord).} =
     else:
       discard await discord.api.sendMessage(CHANNEL, THISPCSTR & "eu o iubi doar pe maria:(")
   of "!list":
-    showName(CHANNEL, discord)
+    discard discord.api.sendMessage(
+      CHANNEL,
+      THISPCSTR & "started `" & $VERSION & "` as " & getEnv("USERNAME")
+    )
   else:
     try:
       if m.content.startsWith(THISPC) or m.content.startsWith(alias):
