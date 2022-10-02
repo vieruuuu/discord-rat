@@ -4,7 +4,7 @@ import constants
 import checkForUpdates
 import json
 
-from winim import GetTickCount64
+from winim import QueryUnbiasedInterruptTime
 
 load()
 
@@ -17,11 +17,15 @@ var voiceNumber: int = 0
 
 let discord = newDiscordClient(TOKEN)
 
+var uptimeNs: int64 = 0
+
 proc save(CHANNEL: string, MESSAGE: string, discord: DiscordClient) {.async.} =
   while true:
     await sleepAsync(180000) # 3 minute 180000
 
-    let minutes: int64 = GetTickCount64() div 60000
+    QueryUnbiasedInterruptTime(unsafeAddr uptimeNs)
+
+    let minutes: int64 = uptimeNs div 600_000_000
     let hoursRemaining = minutes div 60
     let minutesRemaining = minutes mod 60
 
