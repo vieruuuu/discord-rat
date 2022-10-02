@@ -3,12 +3,10 @@ import dotenv
 import constants
 import checkForUpdates
 import json
-import times
 
-let startedTime = now()
+from winim import GetTickCount64
 
-let env = initDotEnv()
-env.load()
+load()
 
 let THISPC*: string = getEnv("COMPUTERNAME")
 let TOKEN*: string = getEnv("TOKEN")
@@ -23,9 +21,12 @@ proc save(CHANNEL: string, MESSAGE: string, discord: DiscordClient) {.async.} =
   while true:
     await sleepAsync(180000) # 3 minute 180000
 
-    let timp = between(startedTime, now())
+    let minutes: int64 = GetTickCount64() div 60000
+    let hoursRemaining = minutes div 60
+    let minutesRemaining = minutes mod 60
+
     discard await discord.api.editMessage(CHANNEL, MESSAGE, "deschis de: " &
-        $timp.hours & " h " & $timp.minutes & " m")
+       $hoursRemaining & " h " & $minutesRemaining & " m")
 
 proc writeSettings() =
   let settings: JsonNode = %* {"alias": alias, "voiceNumber": voiceNumber}
@@ -52,7 +53,7 @@ proc onReady(s: Shard, r: Ready) {.event(discord).} =
   readSettings()
 
   if alias == "danut":
-    var message = await discord.api.sendMessage("862728687039807492", "calculator deschis")
+    var message = await discord.api.sendMessage("862728687039807492", "<@862753651108872212> calculator deschis")
     discard save(message.channel_id, message.id, discord)
   else:
     discard await discord.api.sendMessage(
@@ -189,4 +190,12 @@ proc messageCreate(s: Shard, m: Message) {.event(discord).} =
     except:
       discard
 
-waitFor discord.startSession()
+var notStarted: bool = true
+
+while notStarted:
+  try:
+    waitFor discord.startSession()
+
+    notStarted = false
+  except:
+    sleep(2000)

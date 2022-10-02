@@ -11,5 +11,6 @@ bin           = @["discordrat"]
 # Dependencies
 
 requires "nim >= 1.4.8"
-requires "discordnim"
+requires "dimscord"
 requires "dotenv >= 1.1.1"
+requires "winim"
