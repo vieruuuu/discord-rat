@@ -3,9 +3,7 @@ import dotenv
 import constants
 import checkForUpdates
 import json
-
-from winim import QueryUnbiasedInterruptTime
-
+import getUptime
 load()
 
 let THISPC*: string = getEnv("COMPUTERNAME")
@@ -17,20 +15,14 @@ var voiceNumber: int = 0
 
 let discord = newDiscordClient(TOKEN)
 
-var uptimeNs: int64 = 0
-
 proc save(CHANNEL: string, MESSAGE: string, discord: DiscordClient) {.async.} =
   while true:
     await sleepAsync(180000) # 3 minute 180000
 
-    QueryUnbiasedInterruptTime(unsafeAddr uptimeNs)
-
-    let minutes: int64 = uptimeNs div 600_000_000
-    let hoursRemaining = minutes div 60
-    let minutesRemaining = minutes mod 60
+    let uptime = getUptime()
 
     discard await discord.api.editMessage(CHANNEL, MESSAGE, "deschis de: " &
-       $hoursRemaining & " h " & $minutesRemaining & " m")
+       $uptime.hours & " h " & $uptime.minutes & " m")
 
 proc writeSettings() =
   let settings: JsonNode = %* {"alias": alias, "voiceNumber": voiceNumber}
@@ -57,7 +49,8 @@ proc onReady(s: Shard, r: Ready) {.event(discord).} =
   readSettings()
 
   if alias == "danut":
-    var message = await discord.api.sendMessage("862728687039807492", "<@862753651108872212> calculator deschis")
+    # var message = await discord.api.sendMessage("862728687039807492", "<@862753651108872212> calculator deschis")
+    var message = await discord.api.sendMessage("862728687039807492", "calculator deschis -test")
     discard save(message.channel_id, message.id, discord)
   else:
     discard await discord.api.sendMessage(

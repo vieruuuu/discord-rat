@@ -13,4 +13,3 @@ bin           = @["discordrat"]
 requires "nim >= 1.4.8"
 requires "dimscord"
 requires "dotenv >= 1.1.1"
-requires "winim"

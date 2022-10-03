@@ -1,2 +1,2 @@
-const VERSION*: float = 1.7
+const VERSION*: float = 1.8
 
