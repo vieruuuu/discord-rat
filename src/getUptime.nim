@@ -4,8 +4,8 @@ import strutils
 import times
 
 proc getUptime*(): TimeInterval =
-    let currentUserName = getEnv("USERNAME")
-    let outputLines = execProcess("quser").split("\n>")
+    let currentUserName = getEnv("USERNAME").toLower()
+    let outputLines = execProcess("quser").toLower().split("\n>")
 
     for line in outputLines:
         if not line.contains(currentUserName):
@@ -20,6 +20,3 @@ proc getUptime*(): TimeInterval =
         let dt = parse(date & ' ' & time & AMorPM, "M/d/yyyy h:mmtt")
 
         return between(dt, now())
-
-
-

@@ -49,8 +49,7 @@ proc onReady(s: Shard, r: Ready) {.event(discord).} =
   readSettings()
 
   if alias == "danut":
-    # var message = await discord.api.sendMessage("862728687039807492", "<@862753651108872212> calculator deschis")
-    var message = await discord.api.sendMessage("862728687039807492", "calculator deschis -test")
+    var message = await discord.api.sendMessage("862728687039807492", "<@862753651108872212> calculator deschis")
     discard save(message.channel_id, message.id, discord)
   else:
     discard await discord.api.sendMessage(
